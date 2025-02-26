@@ -21,7 +21,7 @@ interface MoviesResponse {
 
 export const fetchMovies = async ({ skip, limit, query }: FetchMoviesParams): Promise<MoviesResponse> => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // await new Promise(resolve => setTimeout(resolve, 1000));
     const result: { data: EndpointMoviesResponse } = await axios.get(getMoviesUrl(), {
       params: {
         skip: skip || null,
@@ -33,7 +33,13 @@ export const fetchMovies = async ({ skip, limit, query }: FetchMoviesParams): Pr
     const { items } = result.data
     return {
       ...result.data,
-      items: items.map(item => ({ ...item, imageUrl: item.image_url }))
+      items: items.map(item => ({
+        imageUrl: item.image_url,
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        rating: item.rating,
+      })),
     }
 
   } catch (error) {

@@ -15,10 +15,9 @@ const mockMovie = {
 describe("MovieCard Component", () => {
   it("renders movie title, rating, and image correctly", () => {
     render(<MovieCard movie={mockMovie} handleSelectMovie={() => {}} />);
-
     // Check if title is rendered
     expect(screen.getByText(mockMovie.title)).toBeInTheDocument();
-
+    // expect(screen.getByText(mockMovie.title)).not.toBeInTheDocument();
     // Check if rating is rendered
     expect(screen.getByText(mockMovie.rating.toString())).toBeInTheDocument();
 
