@@ -208,7 +208,7 @@ const MoviesGrid: React.FC<object> = () => {
                     </StyledInputIconButton>
                   </InputAdornment>
                 }
-                label="Password"
+                label="Search"
               />
             </FormControl>
             <StyledSelect value={pageSize} onChange={handlePageSizeChange}>

@@ -45,7 +45,12 @@ export const MovieCard: React.FC<MovieCardProps> = ({
 }) => {
   return (
     <StyledBox key={movie.id} onClick={() => handleSelectMovie(movie.id)}>
-      <StyledMovieTitle variant="body2">{movie.title}</StyledMovieTitle>
+      <StyledMovieTitle
+        data-testid={`movie-title-test-id-${movie.id}`}
+        variant="body2"
+      >
+        {movie.title}
+      </StyledMovieTitle>
       <StyledMovieRating variant="body2">
         {movie.rating} <StyledStarIcon />
       </StyledMovieRating>

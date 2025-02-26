@@ -1,75 +1,76 @@
-import { render, renderHook, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import { render, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import MoviesGrid from "../components/MoviesGrid/MoviesGrid";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { setupServer } from "msw/node";
-// import * as mod from "../api/fetchers";
-
-// vi.spyOn(mod, "fetchMovies", () => Promise.resolve({ total: 0, items: [] }));
-
-// // vi.mock("../api/fetchers", () => ({
-// //   fetchMovies: vi.fn(() => Promise.resolve({ total: 0, items: [] })), // Default mock implementation
-// // }));
-
+import { movieMock } from "../mocks/movieMock";
 import { http, HttpResponse } from "msw";
+import { server } from "../mocks/node";
 import { getMoviesUrl } from "../utils/endpoints";
-import { useMovies } from "../hooks/useMovies";
 
-const results = {
-  items: [],
-  total: 0,
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        // ✅ turns retries off
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
 };
-export const restHandlers = [
-  http.get(getMoviesUrl(), ({ request }) => {
-    console.log("Outgoing:", getMoviesUrl(), request.url, request.method);
-    return HttpResponse.json({ success: false }, { status: 401 });
-    return HttpResponse.json(results);
-  }),
-];
-const server = setupServer(...restHandlers);
-
-server.events.on("request:start", ({ request }) => {
-  console.log("Outgoing:", request.method, request.url);
-});
 
 describe("MoviesGrid Component", () => {
-  // Start server before all tests
-  beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+  beforeAll(() => {});
 
-  beforeEach(() => {
-    vi.useFakeTimers();
-    // Clear previous mock calls before each test
-    vi.clearAllMocks();
-  });
+  beforeEach(() => {});
 
-  // Close server after all tests
-  afterAll(() => server.close());
+  afterAll(() => {});
 
   afterEach(() => {
-    // Reset handlers after each test for test isolation
+    // This will remove any runtime request handlers
+    // after each test, ensuring isolated network behavior.
     server.resetHandlers();
   });
 
-  it("assert 2 + 2", () => {
-    expect(2 + 2).toBe(4);
+  it("should render fetched movie", async () => {
+    const component = render(<MoviesGrid />, {
+      wrapper: createWrapper(),
+    });
+
+    const { getAllByTestId, queryByTestId, getByTestId } = component;
+    expect(getAllByTestId("skeleton").length).toBeGreaterThan(0);
+
+    await waitFor(() => {
+      expect(queryByTestId("skeleton")).toBe(null);
+    });
+    await waitFor(() => {
+      expect(getByTestId(`movie-title-test-id-${movieMock.id}`)).toBeVisible();
+    });
   });
 
-  // it("renders skeletons when loading", async () => {
-  //   const queryClient = new QueryClient({
-  //     defaultOptions: {
-  //       queries: {
-  //         retry: false,
-  //       },
-  //     },
-  //   });
+  it("should render error message if fetching movies fails", async () => {
+    server.use(
+      http.get(getMoviesUrl(), () => {
+        return new HttpResponse(null, { status: 500 });
+      })
+    );
 
-  //   const wrapper = ({ children }: { children: React.ReactNode }) => (
-  //     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  //   );
+    const { getAllByTestId, queryByTestId, getByText } = render(
+      <MoviesGrid />,
+      {
+        wrapper: createWrapper(),
+      }
+    );
 
-  //   vi.runAllTimers();
+    expect(getAllByTestId("skeleton").length).toBeGreaterThan(0);
 
-  //   const { getAllByTestId } = render(<MoviesGrid />, { wrapper });
-  //   expect(getAllByTestId("skeleton").length).toBeGreaterThan(0);
-  // });
+    await waitFor(() => {
+      expect(queryByTestId("skeleton")).toBe(null);
+    });
+    await waitFor(() => {
+      expect(getByText("😵 An error occurred")).toBeVisible();
+    });
+  });
 });
