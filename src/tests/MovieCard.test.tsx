@@ -32,7 +32,7 @@ describe("MovieCard Component", () => {
     render(
       <MovieCard movie={mockMovie} handleSelectMovie={handleSelectMovie} />
     );
-
+    console.log("testing", mockMovie);
     // Simulate click event
     fireEvent.click(screen.getByRole("img", { name: mockMovie.title }));
 
